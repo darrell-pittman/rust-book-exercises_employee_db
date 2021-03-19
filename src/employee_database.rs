@@ -69,12 +69,15 @@ impl EmployeeDatabase {
     }
 
     pub fn parse_db_command(command_str: &str) -> DbCommand {
-        let words: Vec<&str> = command_str.split_ascii_whitespace().collect();
+        let words: Vec<&str> = command_str
+            .trim_end_matches(|c| ",.!?\n".contains(c))
+            .split_ascii_whitespace()
+            .collect();
         match words[0].to_lowercase().as_str() {
             "add" => {
                 if let Some(idx) = words.iter().position(|&x| x.eq_ignore_ascii_case("to")) {
-                    let name = &words[1..idx].join(" ");
-                    let dept = &words[idx + 1..].join(" ");
+                    let name = words[1..idx].join(" ");
+                    let dept = words[idx + 1..].join(" ");
                     DbCommand::AddEmployee(EmployeeDatabase::make_employee(
                         dept.to_string(),
                         name.to_string(),
