@@ -32,7 +32,10 @@ impl EmployeeDatabase {
         if self.db.is_empty() {
             println!("No data available!");
         } else {
-            for dept in self.db.keys() {
+            let mut keys: Vec<&String> = self.db.keys().collect();
+            keys.sort();
+
+            for dept in keys {
                 self.print_employees_for_dept(&dept);
             }
         }
@@ -44,6 +47,8 @@ impl EmployeeDatabase {
         println!();
         if let Some(employees) = self.db.get(dept) {
             println!("Department: {}", dept);
+            let mut employees: Vec<&String> = employees.iter().collect();
+            employees.sort();
             println!("Employees: {:#?}", employees);
         } else {
             println!("Deptartment {} not found!", &dept);
