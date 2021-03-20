@@ -59,14 +59,17 @@ impl EmployeeDatabase {
         }
     }
 
-    pub fn modify_database(&mut self, cmd: &DbCommand) {
+    pub fn modify_database(&mut self, cmd: DbCommand) {
         match cmd {
             DbCommand::AddEmployee(employee) => {
+                let msg = format!("{} added to {}.", employee.name, employee.dept);
+
                 self.db
-                    .entry(employee.dept.clone())
+                    .entry(employee.dept)
                     .or_insert(Vec::new())
-                    .push(employee.name.clone());
-                println!("{} added to {}.", employee.name, employee.dept);
+                    .push(employee.name);
+
+                println!("{}", msg);
             }
             _ => println!(
                 "Invalid, unknown or unsupported database command: {:?}",
@@ -80,6 +83,7 @@ impl EmployeeDatabase {
             .trim_end_matches(|c| ",.!?\n".contains(c))
             .split_ascii_whitespace()
             .collect();
+
         match words[0].to_lowercase().as_str() {
             "add" => {
                 if let Some(idx) = words.iter().position(|&x| x.eq_ignore_ascii_case("to")) {

@@ -16,7 +16,7 @@ pub fn command_loop(database: &mut EmployeeDatabase) {
         match command {
             Command::ShowAllEmployees => print_all_employees(database),
             Command::ShowEmployeesForDept(dept) => print_employees_for_dept(database, &dept),
-            Command::Modify(command) => database.modify_database(&command),
+            Command::Modify(command) => database.modify_database(command),
             Command::Quit => {
                 println!("Good bye!");
                 break;
