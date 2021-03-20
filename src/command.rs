@@ -14,8 +14,8 @@ pub fn command_loop(database: &mut EmployeeDatabase) {
     loop {
         let command = get_command();
         match command {
-            Command::ShowAllEmployees => database.print_all_employees(),
-            Command::ShowEmployeesForDept(dept) => database.print_employees_for_dept(&dept),
+            Command::ShowAllEmployees => print_all_employees(database),
+            Command::ShowEmployeesForDept(dept) => print_employees_for_dept(database, &dept),
             Command::Modify(command) => database.modify_database(&command),
             Command::Quit => {
                 println!("Good bye!");
@@ -65,4 +65,31 @@ fn get_command() -> Command {
         },
         Err(_) => Command::Invalid,
     }
+}
+
+pub fn print_all_employees(database: &EmployeeDatabase) {
+    println!();
+    println!("----------All employees----------");
+    println!();
+    if let Some(departments) = database.get_departments_sorted() {
+        for dept in departments {
+            print_employees_for_dept(database, &dept);
+        }
+    } else {
+        println!("No data available!");
+    }
+    println!();
+}
+
+pub fn print_employees_for_dept(database: &EmployeeDatabase, dept: &String) {
+    println!("---------------------------------");
+    println!();
+    if let Some(employees) = database.get_employees_for_dept_sorted(dept) {
+        println!("Department: {}", dept);
+        println!("Employees: {:#?}", employees);
+    } else {
+        println!("Deptartment {} not found!", &dept);
+    }
+    println!();
+    println!("---------------------------------");
 }

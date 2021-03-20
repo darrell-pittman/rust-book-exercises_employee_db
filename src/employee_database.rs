@@ -25,36 +25,38 @@ impl EmployeeDatabase {
         Employee { dept, name }
     }
 
-    pub fn print_all_employees(&self) {
-        println!();
-        println!("----------All employees----------");
-        println!();
+    pub fn get_departments(&self) -> Option<Vec<&String>> {
         if self.db.is_empty() {
-            println!("No data available!");
+            None
         } else {
-            let mut keys: Vec<&String> = self.db.keys().collect();
-            keys.sort();
-
-            for dept in keys {
-                self.print_employees_for_dept(&dept);
-            }
+            Some(self.db.keys().collect())
         }
-        println!();
     }
 
-    pub fn print_employees_for_dept(&self, dept: &String) {
-        println!("---------------------------------");
-        println!();
-        if let Some(employees) = self.db.get(dept) {
-            println!("Department: {}", dept);
-            let mut employees: Vec<&String> = employees.iter().collect();
-            employees.sort();
-            println!("Employees: {:#?}", employees);
+    pub fn get_departments_sorted(&self) -> Option<Vec<&String>> {
+        if let Some(mut depts) = self.get_departments() {
+            depts.sort();
+            Some(depts)
         } else {
-            println!("Deptartment {} not found!", &dept);
+            None
         }
-        println!();
-        println!("---------------------------------");
+    }
+
+    pub fn get_employees_for_dept(&self, dept: &str) -> Option<Vec<&String>> {
+        if let Some(employees) = self.db.get(dept) {
+            Some(employees.iter().collect())
+        } else {
+            None
+        }
+    }
+
+    pub fn get_employees_for_dept_sorted(&self, dept: &str) -> Option<Vec<&String>> {
+        if let Some(mut employees) = self.get_employees_for_dept(dept) {
+            employees.sort();
+            Some(employees)
+        } else {
+            None
+        }
     }
 
     pub fn modify_database(&mut self, cmd: &DbCommand) {
