@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 pub struct EmployeeDatabase {
     db: HashMap<String, Vec<String>>,
@@ -13,8 +14,28 @@ pub struct Employee {
 #[derive(Debug)]
 pub enum DbCommand {
     AddEmployee(Employee),
-    Invalid(String),
 }
+
+#[derive(Debug)]
+pub struct EmployeeDatabaseError {
+    msg: String,
+}
+
+impl EmployeeDatabaseError {
+    fn new(msg: &str) -> Self {
+        Self {
+            msg: msg.to_string(),
+        }
+    }
+}
+
+impl fmt::Display for EmployeeDatabaseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
+
+type Result<T> = std::result::Result<T, EmployeeDatabaseError>;
 
 impl EmployeeDatabase {
     pub fn new() -> EmployeeDatabase {
@@ -34,29 +55,23 @@ impl EmployeeDatabase {
     }
 
     pub fn get_departments_sorted(&self) -> Option<Vec<&String>> {
-        if let Some(mut depts) = self.get_departments() {
+        self.get_departments().and_then(|mut depts| {
             depts.sort();
             Some(depts)
-        } else {
-            None
-        }
+        })
     }
 
     pub fn get_employees_for_dept(&self, dept: &str) -> Option<Vec<&String>> {
-        if let Some(employees) = self.db.get(dept) {
-            Some(employees.iter().collect())
-        } else {
-            None
-        }
+        self.db
+            .get(dept)
+            .and_then(|employees| Some(employees.iter().collect()))
     }
 
     pub fn get_employees_for_dept_sorted(&self, dept: &str) -> Option<Vec<&String>> {
-        if let Some(mut employees) = self.get_employees_for_dept(dept) {
+        self.get_employees_for_dept(dept).and_then(|mut employees| {
             employees.sort();
             Some(employees)
-        } else {
-            None
-        }
+        })
     }
 
     pub fn modify_database(&mut self, cmd: DbCommand) {
@@ -71,14 +86,10 @@ impl EmployeeDatabase {
 
                 println!("{}", msg);
             }
-            _ => println!(
-                "Invalid, unknown or unsupported database command: {:?}",
-                cmd
-            ),
         }
     }
 
-    pub fn parse_db_command(command_str: &str) -> DbCommand {
+    pub fn parse_db_command(command_str: &str) -> self::Result<DbCommand> {
         let words: Vec<&str> = command_str
             .trim_end_matches(|c| ",.!?\n".contains(c))
             .split_ascii_whitespace()
@@ -89,15 +100,19 @@ impl EmployeeDatabase {
                 if let Some(idx) = words.iter().position(|&x| x.eq_ignore_ascii_case("to")) {
                     let name = words[1..idx].join(" ");
                     let dept = words[idx + 1..].join(" ");
-                    DbCommand::AddEmployee(EmployeeDatabase::make_employee(
+                    Ok(DbCommand::AddEmployee(EmployeeDatabase::make_employee(
                         dept.to_string(),
                         name.to_string(),
-                    ))
+                    )))
                 } else {
-                    DbCommand::Invalid(command_str.trim().to_string())
+                    Err(EmployeeDatabaseError::new(
+                        format!("Invalid Add Syntax: [{}]", command_str.trim()).as_str(),
+                    ))
                 }
             }
-            _ => DbCommand::Invalid(command_str.trim().to_string()),
+            _ => Err(EmployeeDatabaseError::new(
+                format!("Invalid modify command: [{}]", command_str.trim()).as_str(),
+            )),
         }
     }
 }
