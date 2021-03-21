@@ -123,7 +123,7 @@ pub fn print_all_employees(database: &EmployeeDatabase) {
     println!();
 }
 
-pub fn print_employees_for_dept(database: &EmployeeDatabase, dept: &String) {
+pub fn print_employees_for_dept(database: &EmployeeDatabase, dept: &str) {
     println!("---------------------------------");
     println!();
     if let Some(employees) = database.get_employees_for_dept_sorted(dept) {
