@@ -90,10 +90,8 @@ impl EmployeeDatabase {
     }
 
     pub fn parse_db_command(command_str: &str) -> self::Result<DbCommand> {
-        let words: Vec<&str> = command_str
-            .trim_end_matches(|c| ",.!?\n".contains(c))
-            .split_ascii_whitespace()
-            .collect();
+        let trimmed = command_str.trim_end_matches(|c| ",.!?\n".contains(c));
+        let words: Vec<&str> = trimmed.split_ascii_whitespace().collect();
 
         match words[0].to_lowercase().as_str() {
             "add" => {
@@ -101,17 +99,16 @@ impl EmployeeDatabase {
                     let name = words[1..idx].join(" ");
                     let dept = words[idx + 1..].join(" ");
                     Ok(DbCommand::AddEmployee(EmployeeDatabase::make_employee(
-                        dept.to_string(),
-                        name.to_string(),
+                        dept, name,
                     )))
                 } else {
                     Err(EmployeeDatabaseError::new(
-                        format!("Invalid Add Syntax: [{}]", command_str.trim()).as_str(),
+                        format!("Invalid Add Syntax: [{}]", trimmed).as_str(),
                     ))
                 }
             }
             _ => Err(EmployeeDatabaseError::new(
-                format!("Invalid modify command: [{}]", command_str.trim()).as_str(),
+                format!("Invalid modify command: [{}]", trimmed).as_str(),
             )),
         }
     }

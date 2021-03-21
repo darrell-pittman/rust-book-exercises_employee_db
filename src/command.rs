@@ -51,17 +51,23 @@ type Result<T> = std::result::Result<T, CommandError>;
 pub fn command_loop(database: &mut EmployeeDatabase) {
     loop {
         match get_command() {
-            Ok(command) => match command {
-                Command::ShowAllEmployees => print_all_employees(database),
-                Command::ShowEmployeesForDept(dept) => print_employees_for_dept(database, &dept),
-                Command::Modify(command) => database.modify_database(command),
-                Command::Quit => {
-                    println!("Good bye!");
-                    break;
+            Ok(command) => {
+                println!();
+                match command {
+                    Command::ShowAllEmployees => print_all_employees(database),
+                    Command::ShowEmployeesForDept(dept) => {
+                        print_employees_for_dept(database, &dept)
+                    }
+                    Command::Modify(command) => database.modify_database(command),
+                    Command::Quit => {
+                        println!("Good bye!");
+                        break;
+                    }
                 }
-            },
-            Err(e) => println!("{}", e),
+            }
+            Err(e) => println!("\n{}", e),
         }
+        println!();
     }
 }
 
@@ -74,24 +80,25 @@ fn get_command() -> self::Result<Command> {
 
     let mut choice = String::new();
     io::stdin().read_line(&mut choice)?;
+
+    if "q".eq_ignore_ascii_case(choice.trim()) {
+        return Ok(Command::Quit);
+    }
+
     let choice = choice.trim().parse::<u32>()?;
 
     match choice {
         1 => Ok(Command::ShowAllEmployees),
         2 => {
-            println!("Please enter dept:");
+            println!("\nPlease enter dept:");
             let mut dept = String::new();
-            io::stdin()
-                .read_line(&mut dept)
-                .expect("Failed to readline");
+            io::stdin().read_line(&mut dept)?;
             Ok(Command::ShowEmployeesForDept(dept.trim().to_string()))
         }
         3 => {
-            println!(r#"Please enter "Add Employee" command: (Add {{name}} to {{dept}})"#);
+            println!("\nPlease enter \"Add Employee\" command: (Add {{name}} to {{dept}})");
             let mut command = String::new();
-            io::stdin()
-                .read_line(&mut command)
-                .expect("Failed to read line");
+            io::stdin().read_line(&mut command)?;
             let db_command = EmployeeDatabase::parse_db_command(&command[..])?;
             Ok(Command::Modify(db_command))
         }
