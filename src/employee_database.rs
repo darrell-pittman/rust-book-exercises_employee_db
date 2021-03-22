@@ -68,7 +68,7 @@ impl Database {
         }
     }
 
-    pub fn parse_db_command(command_str: &str) -> self::Result<DbCommand> {
+    pub fn parse_db_command(command_str: &str) -> Result<DbCommand> {
         let trimmed = command_str.trim_end_matches(|c| ",.!?\n".contains(c));
         let words: Vec<&str> = trimmed.split_ascii_whitespace().collect();
 
