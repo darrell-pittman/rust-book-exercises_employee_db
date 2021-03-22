@@ -11,6 +11,16 @@ pub mod app_error {
         Command,
     }
 
+    impl fmt::Display for Kind {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            let kind_str = match *self {
+                Kind::EmployeeDatabase => "Employee Database",
+                Kind::Command => "Command",
+            };
+            write!(f, "{}", kind_str)
+        }
+    }
+
     #[derive(Debug)]
     pub struct ApplicationError {
         msg: String,
@@ -25,7 +35,7 @@ pub mod app_error {
 
     impl fmt::Display for ApplicationError {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{}", self.msg)
+            write!(f, "Kind: [{}], Msg: {}", self.kind, self.msg)
         }
     }
 

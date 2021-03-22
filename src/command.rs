@@ -36,7 +36,7 @@ impl Application {
                         }
                     }
                 }
-                Err(e) => println!("\n{}", e.to_string()),
+                Err(e) => println!("\nError - {}", e),
             }
             println!();
         }
@@ -47,7 +47,7 @@ impl Application {
         println!("\t1 - Show All Employees");
         println!("\t2 - Show Employees for Dept");
         println!("\t3 - Add Employee");
-        println!("\t4 - Quit");
+        println!("\t4 - Quit (q)");
 
         let mut choice = String::new();
         io::stdin().read_line(&mut choice)?;
