@@ -1,7 +1,7 @@
+use crate::common::{app_error, Result};
 use std::collections::HashMap;
-use std::fmt;
 
-pub struct EmployeeDatabase {
+pub struct Database {
     db: HashMap<String, Vec<String>>,
 }
 
@@ -16,30 +16,9 @@ pub enum DbCommand {
     AddEmployee(Employee),
 }
 
-#[derive(Debug)]
-pub struct EmployeeDatabaseError {
-    msg: String,
-}
-
-impl EmployeeDatabaseError {
-    fn new(msg: &str) -> Self {
-        Self {
-            msg: msg.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for EmployeeDatabaseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.msg)
-    }
-}
-
-type Result<T> = std::result::Result<T, EmployeeDatabaseError>;
-
-impl EmployeeDatabase {
-    pub fn new() -> EmployeeDatabase {
-        EmployeeDatabase { db: HashMap::new() }
+impl Database {
+    pub fn new() -> Database {
+        Database { db: HashMap::new() }
     }
 
     pub fn make_employee(dept: String, name: String) -> Employee {
@@ -98,18 +77,18 @@ impl EmployeeDatabase {
                 if let Some(idx) = words.iter().position(|&x| x.eq_ignore_ascii_case("to")) {
                     let name = words[1..idx].join(" ");
                     let dept = words[idx + 1..].join(" ");
-                    Ok(DbCommand::AddEmployee(EmployeeDatabase::make_employee(
-                        dept, name,
-                    )))
+                    Ok(DbCommand::AddEmployee(Database::make_employee(dept, name)))
                 } else {
-                    Err(EmployeeDatabaseError::new(
-                        format!("Invalid Add Syntax: [{}]", trimmed).as_str(),
-                    ))
+                    Err(Box::new(app_error::ApplicationError::new(
+                        format!("Invalid Add Syntax: [{}]", trimmed),
+                        app_error::Kind::EmployeeDatabase,
+                    )))
                 }
             }
-            _ => Err(EmployeeDatabaseError::new(
-                format!("Invalid modify command: [{}]", trimmed).as_str(),
-            )),
+            _ => Err(Box::new(app_error::ApplicationError::new(
+                format!("Invalid modify command: [{}]", trimmed),
+                app_error::Kind::EmployeeDatabase,
+            ))),
         }
     }
 }
