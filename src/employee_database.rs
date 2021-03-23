@@ -53,17 +53,15 @@ impl Database {
         })
     }
 
-    pub fn modify_database(&mut self, cmd: DbCommand) {
+    pub fn modify_database(&mut self, cmd: &DbCommand) {
         match cmd {
             DbCommand::AddEmployee(employee) => {
-                let msg = format!("{} added to {}.", employee.name, employee.dept);
-
                 self.db
-                    .entry(employee.dept)
+                    .entry(employee.dept.clone())
                     .or_insert(Vec::new())
-                    .push(employee.name);
+                    .push(employee.name.clone());
 
-                println!("{}", msg);
+                println!("{} added to {}.", employee.name, employee.dept);
             }
         }
     }

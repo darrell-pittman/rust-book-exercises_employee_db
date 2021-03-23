@@ -12,6 +12,36 @@ enum Command {
     Quit,
 }
 
+impl Command {
+    fn run(&self, app: &mut Application) -> CommandAction {
+        match self {
+            Command::ShowAllEmployees => app.print_all_employees(),
+            Command::ShowEmployeesForDept(dept) => {
+                app.print_employees_for_dept(&dept);
+            }
+            Command::Modify(command) => {
+                app.database.modify_database(command);
+            }
+            Command::Quit => {
+                println!("Good bye!");
+            }
+        }
+        self.into_action()
+    }
+
+    fn into_action(&self) -> CommandAction {
+        match self {
+            Command::Quit => CommandAction::Quit,
+            _ => CommandAction::Continue,
+        }
+    }
+}
+
+enum CommandAction {
+    Quit,
+    Continue,
+}
+
 pub struct Application {
     database: Database,
 }
@@ -25,15 +55,8 @@ impl Application {
         loop {
             match Self::get_command() {
                 Ok(command) => {
-                    println!();
-                    match command {
-                        Command::ShowAllEmployees => self.print_all_employees(),
-                        Command::ShowEmployeesForDept(dept) => self.print_employees_for_dept(&dept),
-                        Command::Modify(command) => self.database.modify_database(command),
-                        Command::Quit => {
-                            println!("Good bye!");
-                            break;
-                        }
+                    if let CommandAction::Quit = command.run(self) {
+                        break;
                     }
                 }
                 Err(e) => println!("\nError - {}", e),
@@ -56,21 +79,22 @@ impl Application {
             return Ok(Command::Quit);
         }
 
-        let choice = choice.trim().parse::<u32>()?;
-
-        match choice {
+        match choice.trim().parse::<u32>()? {
             1 => Ok(Command::ShowAllEmployees),
             2 => {
                 println!("\nPlease enter dept:");
                 let mut dept = String::new();
                 io::stdin().read_line(&mut dept)?;
+                println!();
                 Ok(Command::ShowEmployeesForDept(dept.trim().to_string()))
             }
             3 => {
-                println!("\nPlease enter \"Add Employee\" command: (Add {{name}} to {{dept}})");
+                print!("\nPlease enter \"Add Employee\" command: ");
+                println!("(Add {{name}} to {{dept}})");
                 let mut command = String::new();
                 io::stdin().read_line(&mut command)?;
                 let db_command = Database::parse_db_command(&command[..])?;
+                println!();
                 Ok(Command::Modify(db_command))
             }
             4 => Ok(Command::Quit),
