@@ -6,40 +6,56 @@ use std::io;
 
 #[derive(Debug)]
 enum Command {
+    Begin,
     ShowAllEmployees,
+    GetDepartment,
     ShowEmployeesForDept(String),
+    GetAddCommand,
     Modify(DbCommand),
     Quit,
 }
 
 impl Command {
-    fn run(&self, app: &mut Application) -> CommandAction {
+    fn run(&self, app: &mut Application) -> Result<Command> {
         match self {
-            Command::ShowAllEmployees => app.print_all_employees(),
+            Command::Begin => {
+                println!();
+                Application::get_command()
+            }
+            Command::ShowAllEmployees => {
+                app.print_all_employees();
+                Ok(Command::Begin)
+            }
+            Command::GetDepartment => {
+                println!("\nPlease enter dept:");
+                let mut dept = String::new();
+                io::stdin().read_line(&mut dept)?;
+                println!();
+                Ok(Command::ShowEmployeesForDept(dept.trim().to_string()))
+            }
             Command::ShowEmployeesForDept(dept) => {
                 app.print_employees_for_dept(&dept);
+                Ok(Command::Begin)
+            }
+            Command::GetAddCommand => {
+                print!("\nPlease enter \"Add Employee\" command: ");
+                println!("(Add {{name}} to {{dept}})");
+                let mut command = String::new();
+                io::stdin().read_line(&mut command)?;
+                let db_command = Database::parse_db_command(&command[..])?;
+                println!();
+                Ok(Command::Modify(db_command))
             }
             Command::Modify(command) => {
                 app.database.modify_database(command);
+                Ok(Command::Begin)
             }
             Command::Quit => {
                 println!("Good bye!");
+                Ok(Command::Quit)
             }
         }
-        self.into_action()
     }
-
-    fn into_action(&self) -> CommandAction {
-        match self {
-            Command::Quit => CommandAction::Quit,
-            _ => CommandAction::Continue,
-        }
-    }
-}
-
-enum CommandAction {
-    Quit,
-    Continue,
 }
 
 pub struct Application {
@@ -52,16 +68,18 @@ impl Application {
     }
 
     pub fn command_loop(&mut self) {
+        let mut next_command: Result<Command> = Ok(Command::Begin);
         loop {
-            match Self::get_command() {
-                Ok(command) => {
-                    if let CommandAction::Quit = command.run(self) {
-                        break;
-                    }
+            next_command = match next_command {
+                Ok(command) => command.run(self),
+                Err(e) => {
+                    println!("\nError - {}", e);
+                    Ok(Command::Begin)
                 }
-                Err(e) => println!("\nError - {}", e),
+            };
+            if let Ok(Command::Quit) = next_command {
+                break;
             }
-            println!();
         }
     }
 
@@ -81,22 +99,8 @@ impl Application {
 
         match choice.trim().parse::<u32>()? {
             1 => Ok(Command::ShowAllEmployees),
-            2 => {
-                println!("\nPlease enter dept:");
-                let mut dept = String::new();
-                io::stdin().read_line(&mut dept)?;
-                println!();
-                Ok(Command::ShowEmployeesForDept(dept.trim().to_string()))
-            }
-            3 => {
-                print!("\nPlease enter \"Add Employee\" command: ");
-                println!("(Add {{name}} to {{dept}})");
-                let mut command = String::new();
-                io::stdin().read_line(&mut command)?;
-                let db_command = Database::parse_db_command(&command[..])?;
-                println!();
-                Ok(Command::Modify(db_command))
-            }
+            2 => Ok(Command::GetDepartment),
+            3 => Ok(Command::GetAddCommand),
             4 => Ok(Command::Quit),
             _ => Err(Box::new(app_error::ApplicationError::new(
                 format!("Unknown command choice: {}", choice),
