@@ -71,18 +71,17 @@ impl Database {
         let words: Vec<&str> = trimmed.split_ascii_whitespace().collect();
 
         match words[0].to_lowercase().as_str() {
-            "add" => {
-                if let Some(idx) = words.iter().position(|&x| x.eq_ignore_ascii_case("to")) {
+            "add" => match words.iter().position(|&x| x.eq_ignore_ascii_case("to")) {
+                Some(idx) => {
                     let name = words[1..idx].join(" ");
                     let dept = words[idx + 1..].join(" ");
                     Ok(DbCommand::AddEmployee(Database::make_employee(dept, name)))
-                } else {
-                    Err(Box::new(app_error::ApplicationError::new(
-                        format!("Invalid Add Syntax: [{}]", trimmed),
-                        app_error::Kind::EmployeeDatabase,
-                    )))
                 }
-            }
+                None => Err(Box::new(app_error::ApplicationError::new(
+                    format!("Invalid Add Syntax: [{}]", trimmed),
+                    app_error::Kind::EmployeeDatabase,
+                ))),
+            },
             _ => Err(Box::new(app_error::ApplicationError::new(
                 format!("Invalid modify command: [{}]", trimmed),
                 app_error::Kind::EmployeeDatabase,
