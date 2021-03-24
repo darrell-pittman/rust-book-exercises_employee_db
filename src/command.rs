@@ -15,6 +15,48 @@ enum Command {
     Quit,
 }
 
+#[derive(Debug)]
+enum CommandData {
+    String(String),
+    DbCommand(DbCommand),
+    Nothing,
+}
+
+impl Command {
+    fn next(&self, data: CommandData) -> Result<Self> {
+        match self {
+            Command::Begin => Application::get_command_from_user(),
+            Command::ShowAllEmployees => Ok(Command::Begin),
+            Command::GetDepartment => Ok(Command::ShowEmployeesForDept(self.expect_string(data)?)),
+            Command::ShowEmployeesForDept(_) => Ok(Command::Begin),
+            Command::GetAddCommand => Ok(Command::Modify(self.expect_db_command(data)?)),
+            Command::Modify(_) => Ok(Command::Begin),
+            Command::Quit => Ok(Command::Quit),
+        }
+    }
+
+    fn expect_string(&self, data: CommandData) -> Result<String> {
+        match data {
+            CommandData::String(dept) => Ok(dept),
+            _ => self.data_error(),
+        }
+    }
+
+    fn expect_db_command(&self, data: CommandData) -> Result<DbCommand> {
+        match data {
+            CommandData::DbCommand(command) => Ok(command),
+            _ => self.data_error(),
+        }
+    }
+
+    fn data_error<T>(&self) -> Result<T> {
+        Err(Box::new(app_error::ApplicationError::new(
+            format!("wrong data for command: {:?}", self),
+            app_error::Kind::Command,
+        )))
+    }
+}
+
 pub struct Application {
     database: Database,
 }
@@ -43,43 +85,53 @@ impl Application {
     }
 
     fn run_command(&mut self, command: &Command) -> Result<Command> {
+        let mut command_data = CommandData::Nothing;
         match command {
             Command::Begin => {
                 println!();
-                Self::get_command_from_user()
             }
             Command::ShowAllEmployees => {
                 self.print_all_employees();
-                Ok(Command::Begin)
             }
             Command::GetDepartment => {
                 println!("\nPlease enter dept:");
-                let mut dept = String::new();
-                io::stdin().read_line(&mut dept)?;
+                let dept = Self::get_string_from_user()?;
                 println!();
-                Ok(Command::ShowEmployeesForDept(dept.trim().to_string()))
+                command_data = CommandData::String(dept);
             }
             Command::ShowEmployeesForDept(dept) => {
                 self.print_employees_for_dept(&dept);
-                Ok(Command::Begin)
             }
             Command::GetAddCommand => {
                 print!("\nPlease enter \"Add Employee\" command: ");
                 println!("(Add {{name}} to {{dept}})");
-                let mut command = String::new();
-                io::stdin().read_line(&mut command)?;
-                let db_command = Database::parse_db_command(&command[..])?;
+                let db_command = Self::get_string_from_user()?;
+                let db_command = Database::parse_db_command(&db_command[..])?;
                 println!();
-                Ok(Command::Modify(db_command))
+                command_data = CommandData::DbCommand(db_command)
             }
             Command::Modify(command) => {
                 self.database.modify_database(command);
-                Ok(Command::Begin)
             }
             Command::Quit => {
                 println!("Good bye!");
-                Ok(Command::Quit)
             }
+        }
+        command.next(command_data)
+    }
+
+    fn get_string_from_user() -> Result<String> {
+        let mut string_data = String::new();
+        io::stdin().read_line(&mut string_data)?;
+        println!();
+        let string_data = string_data.trim();
+        if string_data.is_empty() {
+            Err(Box::new(app_error::ApplicationError::new(
+                "Department Name required".to_string(),
+                app_error::Kind::Command,
+            )))
+        } else {
+            Ok(string_data.trim().to_string())
         }
     }
 

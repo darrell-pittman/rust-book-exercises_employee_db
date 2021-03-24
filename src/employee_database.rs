@@ -68,6 +68,14 @@ impl Database {
 
     pub fn parse_db_command(command_str: &str) -> Result<DbCommand> {
         let trimmed = command_str.trim_end_matches(|c| ",.!?\n".contains(c));
+
+        if trimmed.is_empty() {
+            return Err(Box::new(app_error::ApplicationError::new(
+                "Command Required".to_string(),
+                app_error::Kind::EmployeeDatabase,
+            )));
+        }
+
         let words: Vec<&str> = trimmed.split_ascii_whitespace().collect();
 
         match words[0].to_lowercase().as_str() {
