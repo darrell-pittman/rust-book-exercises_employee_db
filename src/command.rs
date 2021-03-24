@@ -19,7 +19,7 @@ enum Command {
 enum CommandData {
     String(String),
     DbCommand(DbCommand),
-    Nothing,
+    None,
 }
 
 impl Command {
@@ -37,7 +37,7 @@ impl Command {
 
     fn expect_string(&self, data: CommandData) -> Result<String> {
         match data {
-            CommandData::String(dept) => Ok(dept),
+            CommandData::String(string_data) => Ok(string_data),
             _ => self.data_error(),
         }
     }
@@ -51,8 +51,8 @@ impl Command {
 
     fn data_error<T>(&self) -> Result<T> {
         Err(Box::new(app_error::ApplicationError::new(
-            format!("wrong data for command: {:?}", self),
-            app_error::Kind::Command,
+            format!("Wrong data for command: {:?}", self),
+            app_error::Kind::System,
         )))
     }
 }
@@ -85,7 +85,7 @@ impl Application {
     }
 
     fn run_command(&mut self, command: &Command) -> Result<Command> {
-        let mut command_data = CommandData::Nothing;
+        let mut command_data = CommandData::None;
         match command {
             Command::Begin => {
                 println!();
@@ -96,8 +96,8 @@ impl Application {
             Command::GetDepartment => {
                 println!("\nPlease enter dept:");
                 let dept = Self::get_string_from_user()?;
-                println!();
                 command_data = CommandData::String(dept);
+                println!();
             }
             Command::ShowEmployeesForDept(dept) => {
                 self.print_employees_for_dept(&dept);
@@ -107,8 +107,8 @@ impl Application {
                 println!("(Add {{name}} to {{dept}})");
                 let db_command = Self::get_string_from_user()?;
                 let db_command = Database::parse_db_command(&db_command[..])?;
+                command_data = CommandData::DbCommand(db_command);
                 println!();
-                command_data = CommandData::DbCommand(db_command)
             }
             Command::Modify(command) => {
                 self.database.modify_database(command);
@@ -123,11 +123,10 @@ impl Application {
     fn get_string_from_user() -> Result<String> {
         let mut string_data = String::new();
         io::stdin().read_line(&mut string_data)?;
-        println!();
         let string_data = string_data.trim();
         if string_data.is_empty() {
             Err(Box::new(app_error::ApplicationError::new(
-                "Department Name required".to_string(),
+                "User input required".to_string(),
                 app_error::Kind::Command,
             )))
         } else {

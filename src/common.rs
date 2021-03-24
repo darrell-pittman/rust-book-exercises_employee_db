@@ -9,6 +9,7 @@ pub mod app_error {
     pub enum Kind {
         EmployeeDatabase,
         Command,
+        System,
     }
 
     impl fmt::Display for Kind {
@@ -16,6 +17,7 @@ pub mod app_error {
             let kind_str = match *self {
                 Kind::EmployeeDatabase => "Employee Database",
                 Kind::Command => "Command",
+                Kind::System => "System",
             };
             write!(f, "{}", kind_str)
         }
