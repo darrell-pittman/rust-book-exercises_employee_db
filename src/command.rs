@@ -25,18 +25,20 @@ impl Application {
     }
 
     pub fn command_loop(&mut self) {
-        let mut next_command: Result<Command> = Self::get_command_from_user();
+        let mut next_command = Command::Begin;
         loop {
-            next_command = match next_command {
-                Ok(command) => self.run_command(&command),
+            next_command = match self.run_command(&next_command) {
+                Ok(command) => {
+                    if let Command::Quit = command {
+                        break;
+                    }
+                    command
+                }
                 Err(e) => {
                     println!("\nError - {}", e);
-                    Ok(Command::Begin)
+                    Command::Begin
                 }
             };
-            if let Ok(Command::Quit) = next_command {
-                break;
-            }
         }
     }
 
