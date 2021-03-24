@@ -130,7 +130,7 @@ impl Application {
                 app_error::Kind::Command,
             )))
         } else {
-            Ok(string_data.trim().to_string())
+            Ok(string_data.to_string())
         }
     }
 
@@ -141,14 +141,13 @@ impl Application {
         println!("\t3 - Add Employee");
         println!("\t4 - Quit (q)");
 
-        let mut choice = String::new();
-        io::stdin().read_line(&mut choice)?;
+        let choice = Self::get_string_from_user()?;
 
-        if "q".eq_ignore_ascii_case(choice.trim()) {
+        if "q".eq_ignore_ascii_case(choice.as_str()) {
             return Ok(Command::Quit);
         }
 
-        match choice.trim().parse::<u32>()? {
+        match choice.parse::<u32>()? {
             1 => Ok(Command::ShowAllEmployees),
             2 => Ok(Command::GetDepartment),
             3 => Ok(Command::GetAddCommand),
