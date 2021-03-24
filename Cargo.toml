@@ -1,5 +1,5 @@
 [package]
-name = "learn"
+name = "employee_database"
 version = "0.1.0"
 authors = ["Darrell Pittman <darrellppittman@gmail.com>"]
 edition = "2018"
