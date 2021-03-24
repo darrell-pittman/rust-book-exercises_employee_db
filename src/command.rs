@@ -15,15 +15,39 @@ enum Command {
     Quit,
 }
 
-impl Command {
-    fn run(&self, app: &mut Application) -> Result<Command> {
-        match self {
+pub struct Application {
+    database: Database,
+}
+
+impl Application {
+    pub fn new(database: Database) -> Self {
+        Self { database }
+    }
+
+    pub fn command_loop(&mut self) {
+        let mut next_command: Result<Command> = Self::get_command_from_user();
+        loop {
+            next_command = match next_command {
+                Ok(command) => self.run_command(&command),
+                Err(e) => {
+                    println!("\nError - {}", e);
+                    Ok(Command::Begin)
+                }
+            };
+            if let Ok(Command::Quit) = next_command {
+                break;
+            }
+        }
+    }
+
+    fn run_command(&mut self, command: &Command) -> Result<Command> {
+        match command {
             Command::Begin => {
                 println!();
-                Application::get_command()
+                Self::get_command_from_user()
             }
             Command::ShowAllEmployees => {
-                app.print_all_employees();
+                self.print_all_employees();
                 Ok(Command::Begin)
             }
             Command::GetDepartment => {
@@ -34,7 +58,7 @@ impl Command {
                 Ok(Command::ShowEmployeesForDept(dept.trim().to_string()))
             }
             Command::ShowEmployeesForDept(dept) => {
-                app.print_employees_for_dept(&dept);
+                self.print_employees_for_dept(&dept);
                 Ok(Command::Begin)
             }
             Command::GetAddCommand => {
@@ -47,7 +71,7 @@ impl Command {
                 Ok(Command::Modify(db_command))
             }
             Command::Modify(command) => {
-                app.database.modify_database(command);
+                self.database.modify_database(command);
                 Ok(Command::Begin)
             }
             Command::Quit => {
@@ -56,34 +80,8 @@ impl Command {
             }
         }
     }
-}
 
-pub struct Application {
-    database: Database,
-}
-
-impl Application {
-    pub fn new(database: Database) -> Self {
-        Self { database }
-    }
-
-    pub fn command_loop(&mut self) {
-        let mut next_command: Result<Command> = Ok(Command::Begin);
-        loop {
-            next_command = match next_command {
-                Ok(command) => command.run(self),
-                Err(e) => {
-                    println!("\nError - {}", e);
-                    Ok(Command::Begin)
-                }
-            };
-            if let Ok(Command::Quit) = next_command {
-                break;
-            }
-        }
-    }
-
-    fn get_command() -> Result<Command> {
+    fn get_command_from_user() -> Result<Command> {
         println!("Please enter a command:");
         println!("\t1 - Show All Employees");
         println!("\t2 - Show Employees for Dept");
