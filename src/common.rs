@@ -12,6 +12,13 @@ pub mod app_error {
         System,
     }
 
+    pub fn new_system_error<T>(msg: &str) -> super::Result<T> {
+        Err(Box::new(self::ApplicationError::new(
+            msg.to_string(),
+            self::Kind::System,
+        )))
+    }
+
     impl fmt::Display for Kind {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             let kind_str = match *self {

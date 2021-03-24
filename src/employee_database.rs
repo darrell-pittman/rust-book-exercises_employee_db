@@ -70,10 +70,7 @@ impl Database {
         let trimmed = command_str.trim_end_matches(|c| ",.!?\n".contains(c));
 
         if trimmed.is_empty() {
-            return Err(Box::new(app_error::ApplicationError::new(
-                "Command Required".to_string(),
-                app_error::Kind::EmployeeDatabase,
-            )));
+            return Self::new_employee_db_error("Command Required");
         }
 
         let words: Vec<&str> = trimmed.split_ascii_whitespace().collect();
@@ -85,15 +82,20 @@ impl Database {
                     let dept = words[idx + 1..].join(" ");
                     Ok(DbCommand::AddEmployee(Database::make_employee(dept, name)))
                 }
-                None => Err(Box::new(app_error::ApplicationError::new(
-                    format!("Invalid Add Syntax: [{}]", trimmed),
-                    app_error::Kind::EmployeeDatabase,
-                ))),
+                None => Self::new_employee_db_error(
+                    format!("Invalid Add Syntax: [{}]", trimmed).as_str(),
+                ),
             },
-            _ => Err(Box::new(app_error::ApplicationError::new(
-                format!("Invalid modify command: [{}]", trimmed),
-                app_error::Kind::EmployeeDatabase,
-            ))),
+            _ => Self::new_employee_db_error(
+                format!("Invalid modify command: [{}]", trimmed).as_str(),
+            ),
         }
+    }
+
+    fn new_employee_db_error<T>(msg: &str) -> Result<T> {
+        Err(Box::new(app_error::ApplicationError::new(
+            msg.to_string(),
+            app_error::Kind::EmployeeDatabase,
+        )))
     }
 }

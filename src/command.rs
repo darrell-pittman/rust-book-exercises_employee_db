@@ -50,10 +50,7 @@ impl Command {
     }
 
     fn data_error<T>(&self) -> Result<T> {
-        Err(Box::new(app_error::ApplicationError::new(
-            format!("Wrong data for command: {:?}", self),
-            app_error::Kind::System,
-        )))
+        app_error::new_system_error(format!("Wrong data for command: {:?}", self).as_str())
     }
 }
 
@@ -125,13 +122,17 @@ impl Application {
         io::stdin().read_line(&mut string_data)?;
         let string_data = string_data.trim();
         if string_data.is_empty() {
-            Err(Box::new(app_error::ApplicationError::new(
-                "User input required".to_string(),
-                app_error::Kind::Command,
-            )))
+            Self::new_command_error("User input required")
         } else {
             Ok(string_data.to_string())
         }
+    }
+
+    fn new_command_error<T>(msg: &str) -> Result<T> {
+        Err(Box::new(app_error::ApplicationError::new(
+            msg.to_string(),
+            app_error::Kind::Command,
+        )))
     }
 
     fn get_command_from_user() -> Result<Command> {
@@ -152,10 +153,7 @@ impl Application {
             2 => Ok(Command::GetDepartment),
             3 => Ok(Command::GetAddCommand),
             4 => Ok(Command::Quit),
-            _ => Err(Box::new(app_error::ApplicationError::new(
-                format!("Unknown command choice: {}", choice),
-                app_error::Kind::Command,
-            ))),
+            _ => Self::new_command_error(format!("Unknown command choice: {}", choice).as_str()),
         }
     }
 
